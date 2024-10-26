@@ -1,0 +1,40 @@
+name: Code Review with GPT
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Run code review with OpenAI GPT
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.(js|py|java|ts)$')
+          for file in $FILES; do
+            CONTENT=$(cat $file)
+            RESPONSE=$(curl -s -X POST https://api.openai.com/v1/completions \
+                       -H "Content-Type: application/json" \
+                       -H "Authorization: Bearer $OPENAI_API_KEY" \
+                       -d "{
+                             \"model\": \"text-davinci-003\",
+                             \"prompt\": \"Please review the following code:\n\n$CONTENT\n\nProvide suggestions for improvement.\",
+                             \"temperature\": 0.5,
+                             \"max_tokens\": 200
+                           }")
+            echo "Review for $file: $RESPONSE" >> review_output.txt
+          done
+
+      - name: Post review comment
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ### Automated Code Review by GPT
+            $(cat review_output.txt)
