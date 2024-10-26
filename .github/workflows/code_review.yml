@@ -14,7 +14,7 @@ jobs:
 
       - name: Run code review with OpenAI GPT
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # OpenAI API 키를 환경 변수로 설정합니다.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # OpenAI API 키를 환경 변수로 설정합니다. gg
         run: |
           # Pull Request에서 변경된 파일 중 확장자가 .js, .py, .java, .ts인 파일만 필터링
           FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.(js|py|java|ts)$')
